@@ -4,7 +4,7 @@ from langchain_community.chat_models import ChatTongyi
 from langchain.agents import create_agent
 import dashscope
 
-# 从环境变量获取 dashscope 的 API Key
+# 方式三(推荐):从.env环境变量获取dashscope的APIKey
 api_key = os.getenv('DASHSCOPE_API_KEY')
 dashscope.api_key = api_key
 
