@@ -1,10 +1,17 @@
 from langchain_core.prompts import PromptTemplate
 from langchain_community.llms import Tongyi  # 导入通义千问Tongyi模型
+
+# 加载环境变量
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
 import dashscope
 import os
 
-# 从环境变量获取 dashscope 的 API Key
-api_key = os.getenv('DASHSCOPE_API_KEY')
+print('DASHSCOPE_API_KEY=' +os.environ.get('DASHSCOPE_API_KEY'))
+
+# 直接设置 API Key
+# api_key = os.getenv('DASHSCOPE_API_KEY')
+api_key = os.environ.get('DASHSCOPE_API_KEY')
 dashscope.api_key = api_key
  
 # 加载 Tongyi 模型
@@ -20,6 +27,8 @@ prompt = PromptTemplate(
 chain = prompt | llm
 
 # 使用 invoke 方法传入输入
+# import pdb
+# pdb.set_trace()  # 程序会在这里停下来，等待你的调试命令
 result1 = chain.invoke({"product": "colorful socks"})
 print(result1)
 

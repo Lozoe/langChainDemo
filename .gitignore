@@ -1,0 +1,9 @@
+# Env files
+.env
+.env.local
+.env.*.local
+/env.json
+
+# Ignore .env files in all directories
+**/.env
+**/.env.*
