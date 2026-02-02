@@ -4,6 +4,9 @@ from qwen_agent.agents import Assistant
 from qwen_agent.tools.base import BaseTool, register_tool
 from qwen_agent.gui import WebUI
 import os
+# 默认加载.env中的环境变量
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
 
 # # 步骤 1：添加一个名为 `my_image_gen` 的自定义工具。
 @register_tool('my_image_gen')
@@ -164,10 +167,10 @@ def app_gui():
 
         print("Web 界面准备就绪，正在启动服务...")
         # 启动 Web 界面
-        # WebUI(
-        #     bot,
-        #     chatbot_config=chatbot_config
-        # ).run()
+        WebUI(
+            bot,
+            chatbot_config=chatbot_config
+        ).run()
     except Exception as e:
         print(f"启动 Web 界面失败: {str(e)}")
         print("请检查网络连接和 API Key 配置")
