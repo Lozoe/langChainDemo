@@ -6,6 +6,12 @@ from langchain_core.tools import tool
 from langchain.agents import create_agent
 from langchain_community.chat_models import ChatTongyi
 import dashscope
+
+# 加载环境变量
+# 默认加载.env中的环境变量
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
 # 从环境变量获取 dashscope 的 API Key
 api_key = os.environ.get('DASHSCOPE_API_KEY')
 dashscope.api_key = api_key
@@ -15,7 +21,7 @@ dashscope.api_key = api_key
 # 您可以通过环境变量 DASHSCOPE_API_KEY 设置，或者直接在这里修改
 # DASHSCOPE_API_KEY = os.getenv('DASHSCOPE_API_KEY', '您的API密钥')
 # 为方便演示，我们直接在此处硬编码 (请注意在生产环境中保护好您的密钥)
-DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
+# DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
 
 # --- 自定义网络诊断工具 ---
 
@@ -163,31 +169,31 @@ def diagnose_network_issue(issue_description: str):
 # --- 主程序入口 ---
 if __name__ == "__main__":
     # 示例 1: 无法访问特定网站
-    task1 = "我无法访问 www.example.com，浏览器显示连接超时。"
-    print("诊断任务 1:")
-    result1 = diagnose_network_issue(task1)
-    print("\n--- 诊断任务 1 结束 ---")
-    print(f"最终诊断结果: {result1}")
-
-    print("\n" + "="*50 + "\n") # 分隔符
+    # task1 = "我无法访问 www.example.com，浏览器显示连接超时。"
+    # print("诊断任务 1:")
+    # result1 = diagnose_network_issue(task1)
+    # print("\n--- 诊断任务 1 结束 ---")
+    # print(f"最终诊断结果: {result1}")
+    #
+    # print("\n" + "="*50 + "\n") # 分隔符
 
     # 示例 2: 内部服务访问失败
-    task2 = "连接到内部数据库服务器 (internal.service.local) 失败，提示 'connection refused'。"
-    print("诊断任务 2:")
-    result2 = diagnose_network_issue(task2)
-    print("\n--- 诊断任务 2 结束 ---")
-    print(f"最终诊断结果: {result2}")
+    # task2 = "连接到内部数据库服务器 (internal.service.local) 失败，提示 'connection refused'。"
+    # print("诊断任务 2:")
+    # result2 = diagnose_network_issue(task2)
+    # print("\n--- 诊断任务 2 结束 ---")
+    # print(f"最终诊断结果: {result2}")
 
-    # # 示例 3: DNS 解析问题 (需要 DNSTool 模拟失败)
+    # 示例 3: DNS 解析问题 (需要 DNSTool 模拟失败)
     # task3 = "我打不开网站 unknown.domain.xyz，好像是 DNS 问题。"
     # print("诊断任务 3:")
     # result3 = diagnose_network_issue(task3)
     # print("\n--- 诊断任务 3 结束 ---")
     # print(f"最终诊断结果: {result3}")
 
-    # # 示例 4: 本地网络接口问题 (需要 InterfaceCheckTool 模拟失败)
-    # task4 = "我的电脑连不上网了，检查一下接口 eth1 的状态。"
-    # print("诊断任务 4:")
-    # result4 = diagnose_network_issue(task4)
-    # print("\n--- 诊断任务 4 结束 ---")
-    # print(f"最终诊断结果: {result4}") 
+    # 示例 4: 本地网络接口问题 (需要 InterfaceCheckTool 模拟失败)
+    task4 = "我的电脑连不上网了，检查一下接口 eth1 的状态。"
+    print("诊断任务 4:")
+    result4 = diagnose_network_issue(task4)
+    print("\n--- 诊断任务 4 结束 ---")
+    print(f"最终诊断结果: {result4}")

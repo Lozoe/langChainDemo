@@ -5,6 +5,11 @@ from langchain.agents import create_agent
 from langchain_core.tools import tool
 import dashscope
 
+# 加载环境变量
+# 默认加载.env中的环境变量
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
 # 方式三(推荐):从.env环境变量获取dashscope的APIKey
 api_key = os.getenv('DASHSCOPE_API_KEY')
 dashscope.api_key = api_key
@@ -24,11 +29,12 @@ def calculator(expression: str) -> str:
 
 # 加载 serpapi 工具 + 自定义计算器
 serpapi_tools = load_tools(["serpapi"])
+
 tools = serpapi_tools + [calculator]
 
 # LangChain 1.x 新写法
 agent = create_agent(llm, tools)
 
 # 运行 agent
-result = agent.invoke({"messages": [("user", "当前北京的温度是多少华氏度？这个温度的1/4是多少")]})
+result = agent.invoke({"messages": [("user", "当前南京的温度是多少华氏度？这个温度的1/4是多少")]})
 print(result["messages"][-1].content)
