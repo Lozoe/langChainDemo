@@ -5,6 +5,11 @@ from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 import dashscope
 
+# 加载环境变量
+# 默认加载.env中的环境变量
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
 # 从环境变量获取 dashscope 的 API Key
 api_key = os.getenv('DASHSCOPE_API_KEY')
 dashscope.api_key = api_key

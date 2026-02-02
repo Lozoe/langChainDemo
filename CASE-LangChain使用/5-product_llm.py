@@ -7,6 +7,11 @@ from langchain_core.tools import tool
 from langchain_core.prompts import PromptTemplate
 from langchain.agents import create_agent
 
+# 加载环境变量
+# 默认加载.env中的环境变量
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
 # 定义了LLM的Prompt Template
 CONTEXT_QA_TMPL = """
 根据以下提供的信息，回答用户的问题
