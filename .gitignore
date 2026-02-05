@@ -6,3 +6,8 @@
 
 # Ignore .env files in all directories
 **/.env.*
+
+**/.idea.*
+.DS_Store
+
+CASE-多文件智能问答Agent/workspace
