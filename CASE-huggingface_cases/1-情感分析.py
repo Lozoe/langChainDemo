@@ -4,10 +4,27 @@
 # In[1]:
 
 
+# import os
+# # 必须在导入 pipeline 之前设置
+# os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+# os.environ["HF_HOME"] = "/root/autodl-tmp/models"  # 同时控制 model 和 tokenizer 缓存
+
+
 import os
-# 必须在导入 pipeline 之前设置
+# 修改为用户主目录下的可写路径
+os.environ["HF_HOME"] = os.path.expanduser("~/huggingface_models")
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
-os.environ["HF_HOME"] = "/root/autodl-tmp/models"  # 同时控制 model 和 tokenizer 缓存
+
+cache_dir = os.path.expanduser("~/huggingface_models")
+
+# import os
+# cache_base = os.path.expanduser("~/huggingface_cache")
+# os.makedirs(cache_base, exist_ok=True)
+#
+# os.environ["HF_HOME"] = cache_base
+# os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+#
+#
 
 from transformers import pipeline
 
@@ -15,7 +32,7 @@ from transformers import pipeline
 # 指定 task="sentiment-analysis"
 # 💡 技巧：如果不指定 model，默认下载英文模型。
 # 这里我们指定一个中文微调过的模型，效果更好。
-cache_dir = '/root/autodl-tmp/models'
+# cache_dir = '/root/autodl-tmp/models'
 classifier = pipeline(
     task="sentiment-analysis",
     model="uer/roberta-base-finetuned-dianping-chinese"
