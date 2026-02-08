@@ -27,7 +27,8 @@ from modelscope import snapshot_download  # 使用 ModelScope 下载模型
 # Step 1: 使用 ModelScope 从魔搭社区下载 Qwen3-0.6B 模型
 # ModelScope 是下载工具，HuggingFace 是加载工具
 modelscope_model_id = "Qwen/Qwen2.5-7B-Instruct"  # ModelScope 上的模型 ID
-cache_dir = "/root/autodl-tmp/models"  # 指定模型下载和缓存的文件夹
+# cache_dir = "/root/autodl-tmp/models"  # 指定模型下载和缓存的文件夹
+cache_dir = os.path.expanduser("~/Documents/models")
 
 print(f"正在从 ModelScope 下载模型: {modelscope_model_id}")
 print(f"模型将保存到: {cache_dir}")
@@ -174,16 +175,16 @@ test_texts = [
     "低息贷款，无抵押，秒到账",        # 垃圾
 ]
 
-print("=" * 60)
-print("方法1：直接使用模型 + Prompt")
-print("=" * 60)
+# print("=" * 60)
+# print("方法1：直接使用模型 + Prompt")
+# print("=" * 60)
 
-for text in test_texts:
-    label_id, label_name = classify_spam_with_prompt(text, model, tokenizer)
-    print(f"文本: {text}")
-    print(f"预测: {label_name} (ID: {label_id})")
-    print("-" * 60)
-
+# for text in test_texts:
+#     label_id, label_name = classify_spam_with_prompt(text, model, tokenizer)
+#     print(f"文本: {text}")
+#     print(f"预测: {label_name} (ID: {label_id})")
+#     print("-" * 60)
+#
 
 # In[7]:
 
