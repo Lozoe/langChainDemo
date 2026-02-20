@@ -1,12 +1,18 @@
 from PyPDF2 import PdfReader
-from langchain.chains.question_answering import load_qa_chain
+from langchain_classic.chains.question_answering import load_qa_chain
 from langchain_community.callbacks.manager import get_openai_callback
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import DashScopeEmbeddings
 from langchain_community.vectorstores import FAISS
 from typing import List, Tuple
 import os
 import pickle
+
+# 获取脚本所在目录，确保相对路径正确
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
 
 DASHSCOPE_API_KEY = os.getenv('DASHSCOPE_API_KEY')
 if not DASHSCOPE_API_KEY:
@@ -158,7 +164,7 @@ def load_knowledge_base(load_path: str, embeddings = None) -> FAISS:
     return knowledgeBase
 
 # 读取PDF文件
-pdf_reader = PdfReader('./浦发上海浦东发展银行西安分行个金客户经理考核办法.pdf')
+pdf_reader = PdfReader(os.path.join(SCRIPT_DIR, '浦发上海浦东发展银行西安分行个金客户经理考核办法.pdf'))
 # 提取文本和页码信息
 text, page_numbers = extract_text_with_page_numbers(pdf_reader)
 text
@@ -167,7 +173,7 @@ text
 print(f"提取的文本长度: {len(text)} 个字符。")
     
 # 处理文本并创建知识库，同时保存到磁盘
-save_dir = "./vector_db"
+save_dir = os.path.join(SCRIPT_DIR, "vector_db")
 knowledgeBase = process_text_with_splitter(text, page_numbers, save_path=save_dir)
 
 # 示例：如何加载已保存的向量数据库
@@ -226,3 +232,19 @@ if query:
             unique_pages.add(source_page)
             print(f"文本块页码: {source_page}")
 
+
+import pickle
+with open(os.path.join(SCRIPT_DIR, "vector_db/page_info.pkl"), "rb") as f:
+    page_info = pickle.load(f)
+
+print("\n" + "=" * 60)
+print("📄 page_info.pkl 内容预览")
+print("=" * 60)
+for i, (chunk, page) in enumerate(page_info.items(), 1):
+    print(f"\n{'─' * 60}")
+    print(f"📌 文本块 {i} | 页码: {page}")
+    print(f"{'─' * 60}")
+    print(f"{chunk[:200]}{'...' if len(chunk) > 200 else ''}")
+print(f"\n{'=' * 60}")
+print(f"📊 共 {len(page_info)} 个文本块")
+print("=" * 60)
