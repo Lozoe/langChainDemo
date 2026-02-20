@@ -4,6 +4,10 @@ import dashscope
 import os
 import json
 
+
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
 # 从环境变量中获取 API Key
 dashscope.api_key = os.getenv('DASHSCOPE_API_KEY')
 
