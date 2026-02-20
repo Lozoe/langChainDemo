@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BGE-M3 Embedding 矩阵乘法详解</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            line-height: 1.8;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 20px;
+            color: #444;
+            border-left: 4px solid #667eea;
+            padding-left: 12px;
+            margin: 30px 0 15px;
+        }
+
+        p {
+            margin: 10px 0;
+            color: #555;
+        }
+
+        code {
+            background: #f0f0f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.9em;
+            color: #e83e8c;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 16px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 12px 0;
+        }
+
+        .highlight {
+            color: #66d9ef;
+        }
+
+        .comment {
+            color: #75715e;
+        }
+
+        .string {
+            color: #a6e22e;
+        }
+
+        ul {
+            padding-left: 24px;
+            margin: 10px 0;
+        }
+
+        li {
+            margin: 4px 0;
+            color: #555;
+        }
+
+        .diagram-section {
+            margin: 25px 0;
+            text-align: center;
+        }
+
+        .diagram-section h3 {
+            font-size: 16px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+
+        .result-table {
+            border-collapse: collapse;
+            margin: 15px auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .result-table th,
+        .result-table td {
+            padding: 10px 18px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .result-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .result-table td {
+            background: #fafafe;
+        }
+
+        .high-sim {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .low-sim {
+            color: #e74c3c;
+        }
+
+        .step-box {
+            background: #f8f9ff;
+            border: 1px solid #e0e4f5;
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin: 15px 0;
+        }
+
+        .formula {
+            text-align: center;
+            font-size: 18px;
+            margin: 15px 0;
+            padding: 12px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            font-family: "Georgia", serif;
+            letter-spacing: 1px;
+        }
+
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 15px 0;
+            font-size: 14px;
+            color: #856404;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>🧮 BGE-M3 Embedding 矩阵乘法详解</h1>
+
+        <!-- ==================== 第一部分：代码上下文 ==================== -->
+        <h2>📝 一、代码上下文</h2>
+        <p>在 <code>bge-m3使用.py</code> 中，定义了两组句子：</p>
+
+        <div class="step-box">
+            <p><strong>🔍 查询句子（Query）— sentences_1：</strong></p>
+            <ul>
+                <li>Q1: <code>"What is BGE M3?"</code></li>
+                <li>Q2: <code>"Defination of BM25"</code></li>
+            </ul>
+            <p><strong>📄 文档句子（Chunk）— sentences_2：</strong></p>
+            <ul>
+                <li>C1:
+                    <code>"BGE M3 is an embedding model supporting dense retrieval, lexical matching and multi-vector interaction."</code>
+                </li>
+                <li>C2:
+                    <code>"BM25 is a bag-of-words retrieval function that ranks a set of documents based on the query terms appearing in each document"</code>
+                </li>
+            </ul>
+        </div>
+
+        <!-- ==================== 第二部分：编码过程 ==================== -->
+        <h2>⚙️ 二、Embedding 编码过程</h2>
+        <p>BGE-M3 模型将每个句子编码为一个 <strong>1024 维</strong>的稠密向量（dense vector）：</p>
+        <pre>
+<span class="comment"># 编码查询句子 → 得到 (2, 1024) 矩阵</span>
+embeddings_1 = model.encode(sentences_1)['dense_vecs']
+
+<span class="comment"># 编码文档句子 → 得到 (2, 1024) 矩阵</span>
+embeddings_2 = model.encode(sentences_2)['dense_vecs']
+    </pre>
+
+        <div class="step-box">
+            <p>编码结果：</p>
+            <ul>
+                <li><code>embeddings_1</code>（查询矩阵 Q）：形状 <code>(2, 1024)</code> — 2 个查询，每个 1024 维</li>
+                <li><code>embeddings_2</code>（文档矩阵 C）：形状 <code>(2, 1024)</code> — 2 个文档，每个 1024 维</li>
+            </ul>
+        </div>
+
+        <!-- ==================== 第三部分：矩阵乘法流程 ==================== -->
+        <h2>🔢 三、矩阵乘法流程</h2>
+        <p>核心代码只有一行：</p>
+        <pre>similarity = embeddings_1 @ embeddings_2.T</pre>
+
+        <p>这行代码执行了以下操作：</p>
+
+        <div class="diagram-section">
+            <h3>整体流程图（Mermaid）</h3>
+            <div class="mermaid">
+                graph TD
+                subgraph 输入句子
+                Q1["Q1: What is BGE M3?"]
+                Q2["Q2: Defination of BM25"]
+                C1["C1: BGE M3 is an..."]
+                C2["C2: BM25 is a..."]
+                end
+
+                Q1 --> EQ["BGE-M3 编码器"]
+                Q2 --> EQ
+                C1 --> EC["BGE-M3 编码器"]
+                C2 --> EC
+
+                EQ --> E1["embeddings_1\n查询矩阵 Q\n形状: 2 x 1024"]
+                EC --> E2["embeddings_2\n文档矩阵 C\n形状: 2 x 1024"]
+
+                E2 --> TR["转置 .T\n形状: 1024 x 2"]
+
+                E1 --> MM["矩阵乘法 @\nQ x C^T"]
+                TR --> MM
+
+                MM --> SIM["相似度矩阵\n形状: 2 x 2"]
+            </div>
+        </div>
+
+        <!-- ==================== 第四部分：矩阵乘法细节 ==================== -->
+        <h2>📐 四、矩阵乘法细节 (SVG 可视化)</h2>
+
+        <div class="formula">
+            similarity = Q<sub>(2×1024)</sub> × C<sup>T</sup><sub>(1024×2)</sub> = Result<sub>(2×2)</sub>
+        </div>
+
+        <div class="diagram-section">
+            <svg width="820" height="520" viewBox="0 0 820 520" xmlns="http://www.w3.org/2000/svg"
+                style="font-family: -apple-system, 'PingFang SC', sans-serif;">
+                <!-- 背景 -->
+                <rect width="820" height="520" rx="12" fill="#fafafe" />
+
+                <!-- ===== 查询矩阵 Q (2x1024) ===== -->
+                <g transform="translate(30, 80)">
+                    <text x="90" y="-12" text-anchor="middle" font-size="14" font-weight="bold" fill="#4a56a6">查询矩阵 Q
+                        (embeddings_1)</text>
+                    <text x="90" y="6" text-anchor="middle" font-size="12" fill="#888">形状: 2 × 1024</text>
+
+                    <!-- 矩阵框 -->
+                    <rect x="0" y="20" width="180" height="80" rx="6" fill="#e8ecff" stroke="#4a56a6"
+                        stroke-width="2" />
+                    <line x1="0" y1="60" x2="180" y2="60" stroke="#4a56a6" stroke-dasharray="4" />
+
+                    <!-- 行标签 -->
+                    <text x="90" y="46" text-anchor="middle" font-size="12" fill="#333">Q1 = [q₁₁, q₁₂, ...,
+                        q₁,₁₀₂₄]</text>
+                    <text x="90" y="78" text-anchor="middle" font-size="12" fill="#333">Q2 = [q₂₁, q₂₂, ...,
+                        q₂,₁₀₂₄]</text>
+
+                    <!-- 维度标注 -->
+                    <text x="-8" y="65" text-anchor="end" font-size="11" fill="#999"
+                        transform="rotate(-90 -8 65)">2行</text>
+                    <text x="90" y="115" text-anchor="middle" font-size="11" fill="#999">1024 列（维度）</text>
+                </g>
+
+                <!-- ===== 乘号 ===== -->
+                <text x="245" y="155" font-size="28" font-weight="bold" fill="#764ba2">×</text>
+
+                <!-- ===== 文档矩阵转置 C^T (1024x2) ===== -->
+                <g transform="translate(280, 30)">
+                    <text x="45" y="-5" text-anchor="middle" font-size="14" font-weight="bold" fill="#a6564a">文档矩阵转置
+                        C&#x1D40;</text>
+                    <text x="45" y="13" text-anchor="middle" font-size="12" fill="#888">形状: 1024 × 2</text>
+
+                    <!-- 矩阵框 -->
+                    <rect x="0" y="25" width="90" height="180" rx="6" fill="#ffe8ec" stroke="#a6564a"
+                        stroke-width="2" />
+                    <line x1="45" y1="25" x2="45" y2="205" stroke="#a6564a" stroke-dasharray="4" />
+
+                    <!-- 列标签 -->
+                    <text x="22" y="120" text-anchor="middle" font-size="11" fill="#333"
+                        transform="rotate(-90 22 120)">C1 列向量</text>
+                    <text x="68" y="120" text-anchor="middle" font-size="11" fill="#333"
+                        transform="rotate(-90 68 120)">C2 列向量</text>
+
+                    <!-- 维度标注 -->
+                    <text x="-12" y="115" text-anchor="end" font-size="11" fill="#999"
+                        transform="rotate(-90 -12 115)">1024 行</text>
+                    <text x="45" y="225" text-anchor="middle" font-size="11" fill="#999">2 列</text>
+                </g>
+
+                <!-- ===== 等号 ===== -->
+                <text x="410" y="155" font-size="28" font-weight="bold" fill="#764ba2">=</text>
+
+                <!-- ===== 结果矩阵 (2x2) ===== -->
+                <g transform="translate(450, 80)">
+                    <text x="80" y="-12" text-anchor="middle" font-size="14" font-weight="bold" fill="#27a660">相似度矩阵
+                        (similarity)</text>
+                    <text x="80" y="6" text-anchor="middle" font-size="12" fill="#888">形状: 2 × 2</text>
+
+                    <!-- 矩阵框 -->
+                    <rect x="0" y="20" width="160" height="80" rx="6" fill="#e8ffec" stroke="#27a660"
+                        stroke-width="2" />
+                    <line x1="0" y1="60" x2="160" y2="60" stroke="#27a660" />
+                    <line x1="80" y1="20" x2="80" y2="100" stroke="#27a660" />
+
+                    <!-- 值 -->
+                    <text x="40" y="46" text-anchor="middle" font-size="13" font-weight="bold"
+                        fill="#27ae60">0.6265</text>
+                    <text x="120" y="46" text-anchor="middle" font-size="13" fill="#e74c3c">0.3477</text>
+                    <text x="40" y="78" text-anchor="middle" font-size="13" fill="#e74c3c">0.3499</text>
+                    <text x="120" y="78" text-anchor="middle" font-size="13" font-weight="bold"
+                        fill="#27ae60">0.6780</text>
+
+                    <!-- 标签 -->
+                    <text x="40" y="118" text-anchor="middle" font-size="10" fill="#999">C1</text>
+                    <text x="120" y="118" text-anchor="middle" font-size="10" fill="#999">C2</text>
+                    <text x="172" y="46" font-size="10" fill="#999">Q1</text>
+                    <text x="172" y="78" font-size="10" fill="#999">Q2</text>
+                </g>
+
+                <!-- ===== 计算细节区域 ===== -->
+                <g transform="translate(30, 310)">
+                    <rect x="0" y="0" width="760" height="190" rx="10" fill="#f8f9ff" stroke="#e0e4f5"
+                        stroke-width="1" />
+                    <text x="20" y="28" font-size="15" font-weight="bold" fill="#4a56a6">📌 逐元素计算过程：</text>
+
+                    <!-- 计算公式 -->
+                    <text x="20" y="60" font-size="13" fill="#333">
+                        <tspan font-weight="bold" fill="#27ae60">similarity[0][0] = 0.6265</tspan>
+                        <tspan dx="10" fill="#666">← Q1 · C1 = q₁₁×c₁₁ + q₁₂×c₁₂ + ... + q₁,₁₀₂₄×c₁,₁₀₂₄（高相似度 ✅）</tspan>
+                    </text>
+                    <text x="20" y="90" font-size="13" fill="#333">
+                        <tspan font-weight="bold" fill="#e74c3c">similarity[0][1] = 0.3477</tspan>
+                        <tspan dx="10" fill="#666">← Q1 · C2 = q₁₁×c₂₁ + q₁₂×c₂₂ + ... + q₁,₁₀₂₄×c₂,₁₀₂₄（低相似度 ❌）</tspan>
+                    </text>
+                    <text x="20" y="120" font-size="13" fill="#333">
+                        <tspan font-weight="bold" fill="#e74c3c">similarity[1][0] = 0.3499</tspan>
+                        <tspan dx="10" fill="#666">← Q2 · C1 = q₂₁×c₁₁ + q₂₂×c₁₂ + ... + q₂,₁₀₂₄×c₁,₁₀₂₄（低相似度 ❌）</tspan>
+                    </text>
+                    <text x="20" y="150" font-size="13" fill="#333">
+                        <tspan font-weight="bold" fill="#27ae60">similarity[1][1] = 0.6780</tspan>
+                        <tspan dx="10" fill="#666">← Q2 · C2 = q₂₁×c₂₁ + q₂₂×c₂₂ + ... + q₂,₁₀₂₄×c₂,₁₀₂₄（高相似度 ✅）</tspan>
+                    </text>
+
+                    <text x="20" y="178" font-size="12" fill="#856404">💡 每个相似度值 = 两个 1024 维向量的点积（即对应维度相乘后求和）</text>
+                </g>
+            </svg>
+        </div>
+
+        <!-- ==================== 第五部分：结果解读 ==================== -->
+        <h2>📊 五、结果解读</h2>
+
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>C1: BGE M3 是一个...</th>
+                    <th>C2: BM25 是一种...</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Q1: What is BGE M3?</strong></td>
+                    <td class="high-sim">0.6265 ✅ 高</td>
+                    <td class="low-sim">0.3477 ❌ 低</td>
+                </tr>
+                <tr>
+                    <td><strong>Q2: Defination of BM25</strong></td>
+                    <td class="low-sim">0.3499 ❌ 低</td>
+                    <td class="high-sim">0.6780 ✅ 高</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="note">
+            <strong>💡 关键结论：</strong><br />
+            • 对角线值（0.6265、0.6780）较高 → 说明查询与对应主题的文档匹配度高<br />
+            • 非对角线值（0.3477、0.3499）较低 → 说明不相关的查询-文档对相似度低<br />
+            • 矩阵乘法的本质是：<strong>批量计算所有 Query-Chunk 对之间的点积相似度</strong>，一次性得到完整的相似度矩阵
+        </div>
+
+        <!-- ==================== 第六部分：总结 ==================== -->
+        <h2>🎯 六、总结</h2>
+
+        <div class="diagram-section">
+            <div class="mermaid">
+                graph LR
+                A["2 个查询句子"] -->|BGE-M3 编码| B["Q 矩阵\n2 x 1024"]
+                C["2 个文档句子"] -->|BGE-M3 编码| D["C 矩阵\n2 x 1024"]
+                D -->|转置| E["C^T 矩阵\n1024 x 2"]
+                B -->|"@ 矩阵乘法"| F["相似度矩阵\n2 x 2"]
+                E -->|"@ 矩阵乘法"| F
+                F -->|对角线高| G["匹配的 Query-Chunk 对"]
+                F -->|非对角线低| H["不匹配的 Query-Chunk 对"]
+            </div>
+        </div>
+
+        <div class="step-box" style="text-align: center; font-size: 14px; color: #666;">
+            <p><strong>核心公式：</strong> similarity<sub>(m×n)</sub> = Q<sub>(m×d)</sub> × C<sup>T</sup><sub>(d×n)</sub></p>
+            <p>其中 m = 查询数量，n = 文档数量，d = 向量维度（1024）</p>
+            <p>结果矩阵中 similarity[i][j] 表示第 i 个查询与第 j 个文档的相似度</p>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+
+</body>
+
+</html>
