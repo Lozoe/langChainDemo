@@ -8,6 +8,9 @@ import pandas as pd
 from sqlalchemy import create_engine
 from qwen_agent.tools.base import BaseTool, register_tool
 
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
 # 定义资源文件根目录
 ROOT_RESOURCE = os.path.join(os.path.dirname(__file__), 'resource')
 

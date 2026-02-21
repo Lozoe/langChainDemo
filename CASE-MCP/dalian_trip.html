@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大连一日游旅行规划表</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --secondary-color: #0080ff;
+            --accent-color: #ffaa00;
+            --text-main: #333;
+            --text-light: #666;
+            --bg-light: #f5f8fa;
+            --border-color: #e1e8ed;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Microsoft YaHei', sans-serif;
+            background-color: #e0e0e0;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* A4 Paper Settings */
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 15mm;
+            position: relative;
+            /* Using grid for general layout */
+            display: grid;
+            grid-template-rows: auto auto 1fr auto;
+            gap: 5mm;
+        }
+
+        /* Print Settings */
+        @media print {
+            body {
+                background: none;
+            }
+
+            .a4-page {
+                margin: 0;
+                box-shadow: none;
+                width: 100%;
+                height: 100%;
+                padding: 10mm;
+                /* Adjust for print margins */
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* 1. Header Section */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        .header-title h1 {
+            font-size: 28pt;
+            color: var(--primary-color);
+            letter-spacing: 2px;
+        }
+
+        .header-title p {
+            font-size: 11pt;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+
+        .header-weather {
+            text-align: right;
+            font-size: 10pt;
+            background: var(--bg-light);
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* 2. Overview Section */
+        .overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .overview-item {
+            display: flex;
+            align-items: center;
+            background: var(--bg-light);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 10pt;
+        }
+
+        .overview-item i {
+            font-size: 18pt;
+            color: var(--secondary-color);
+            margin-right: 10px;
+        }
+
+        /* 3. Timeline / Schedule Table Section */
+        .schedule {
+            margin-top: 5px;
+        }
+
+        .section-title {
+            font-size: 14pt;
+            color: var(--primary-color);
+            border-left: 5px solid var(--accent-color);
+            padding-left: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10pt;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-light);
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .time-col {
+            width: 120px;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .activity-col {
+            width: 150px;
+            font-weight: bold;
+        }
+
+        .location-col {
+            width: 150px;
+        }
+
+        /* Icon styling in table */
+        td i {
+            margin-right: 5px;
+            color: var(--text-light);
+        }
+
+        /* 4. Bottom Grid (Transport, Tips, Contacts) */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .info-box {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .info-box h3 {
+            font-size: 11pt;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .info-box h3 i {
+            margin-right: 8px;
+        }
+
+        .info-list {
+            list-style: none;
+            font-size: 9pt;
+        }
+
+        .info-list li {
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .info-list li::before {
+            content: "•";
+            color: var(--accent-color);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        /* Decoration */
+        .map-decoration {
+            position: absolute;
+            right: 20mm;
+            top: 40mm;
+            opacity: 0.05;
+            font-size: 150pt;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Floating Print Button */
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 12pt;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .print-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        /* Utilities */
+        .highlight {
+            font-weight: bold;
+            color: #d32f2f;
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="print-btn no-print" onclick="window.print()">
+        <i class="fas fa-print"></i> 打印行程单
+    </button>
+
+    <div class="a4-page">
+        <!-- Background Icon Decor -->
+        <i class="fas fa-compass map-decoration"></i>
+
+        <!-- Header -->
+        <header class="header">
+            <div class="header-title">
+                <h1>滨海之都 · 大连一日游</h1>
+                <p><i class="far fa-calendar-alt"></i> 建议日期：2026年2月22日 (周日) | <i class="far fa-clock"></i> 行程：1天 (紧凑精华游)
+                </p>
+            </div>
+            <div class="header-weather">
+                <strong><i class="fas fa-cloud-sun"></i> 大连天气预报</strong><br>
+                晴朗 | 气温 3°C ~ -3°C<br>
+                西北风 5级 (海边风大注意保暖)
+            </div>
+        </header>
+
+        <!-- Overview -->
+        <div class="overview">
+            <div class="overview-item"><i class="fas fa-camera-retro"></i>
+                <div><strong>核心主题</strong><br>海滨风光与异国风情</div>
+            </div>
+            <div class="overview-item"><i class="fas fa-walking"></i>
+                <div><strong>总步数预期</strong><br>约 1.5万 - 2万步</div>
+            </div>
+            <div class="overview-item"><i class="fas fa-wallet"></i>
+                <div><strong>预估预算</strong><br>人均约 200-400元</div>
+            </div>
+            <div class="overview-item"><i class="fas fa-subway"></i>
+                <div><strong>主要交通</strong><br>地铁 + 网约车/出租车</div>
+            </div>
+        </div>
+
+        <!-- Schedule -->
+        <div class="schedule">
+            <h2 class="section-title"><i class="fas fa-list-ul"></i> 详细时间表</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="time-col">时间</th>
+                        <th class="activity-col">活动安排</th>
+                        <th class="location-col">地点</th>
+                        <th>详情与建议</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-col">09:00 - 11:30</td>
+                        <td class="activity-col"><i class="fas fa-bridge"></i> 星海广场漫步</td>
+                        <td class="location-col">沙河口区</td>
+                        <td>亚洲最大的城市级广场。可以喂海鸥，远眺跨海大桥。海风较大，请穿厚外套。<br><span class="highlight">门票：免费</span></td>
+                    </tr>
+                    <tr>
+                        <td class="time-col">11:30 - 13:30</td>
+                        <td class="activity-col"><i class="fas fa-utensils"></i> 渔人码头午餐</td>
+                        <td class="location-col">中山区虎滩渔人码头</td>
+                        <td>推荐打卡大连特色海鲜（海胆、海参、蚬子）。这里有浓郁的欧式风情港湾，非常适合饭后拍照。</td>
+                    </tr>
+                    <tr>
+                        <td class="time-col">14:00 - 16:30</td>
+                        <td class="activity-col"><i class="fas fa-water"></i> 棒棰岛景区</td>
+                        <td class="location-col">中山区迎宾路</td>
+                        <td>水质最好的绝美海岸线。可沿海滨栈道散步。<br><span class="highlight">门票：20元/人</span></td>
+                    </tr>
+                    <tr>
+                        <td class="time-col">17:00 - 18:30</td>
+                        <td class="activity-col"><i class="fas fa-gondola"></i> 东港威尼斯水城</td>
+                        <td class="location-col">东港商务区</td>
+                        <td>体验意大利水城风情建筑。黄昏亮灯时分最美。<br>贡多拉游船体验（可选，约60-80元）。</td>
+                    </tr>
+                    <tr>
+                        <td class="time-col">18:30 - 20:30</td>
+                        <td class="activity-col"><i class="fas fa-store"></i> 俄罗斯风情街/晚餐</td>
+                        <td class="location-col">中山区胜利桥附近</td>
+                        <td>购买俄罗斯特色套娃、巧克力等伴手礼。周边可选择东北菜或俄式西餐作为完美收尾。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bottom Info -->
+        <div class="bottom-grid">
+            <div class="info-box">
+                <h3><i class="fas fa-route"></i> 交通与换乘指南</h3>
+                <ul class="info-list">
+                    <li><strong>星海广场 → 渔人码头：</strong> 距离稍远，建议直接打车（约25分钟，30元左右）。公交可乘 2号线转旅游环线。</li>
+                    <li><strong>渔人码头 → 棒棰岛：</strong> 距离较近，建议打车（约15分钟）。</li>
+                    <li><strong>棒棰岛 → 东港：</strong> 乘坐网约车/出租车（约20分钟），东港有地铁2号线（东港站）方便后续离开。</li>
+                    <li>大连起步价一般为10元左右，下载“大连明珠卡”或使用支付宝/微信乘坐公共交通。</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h3><i class="fas fa-exclamation-triangle"></i> 实用提示与紧急电话</h3>
+                <ul class="info-list">
+                    <li><strong>防寒保暖：</strong> 大连海边风力大（达5级），体感温度比实际温度低，务必带好帽子和围巾！</li>
+                    <li><strong>海鲜防骗：</strong> 点菜前看清价格单位（论斤还是论两），尽量选择明码标价的正规餐厅。</li>
+                    <li><strong>旅游咨询/投诉：</strong> 0411-12345 (政务及旅游服务)</li>
+                    <li><strong>紧急求助：</strong> 110 (报警) / 120 (急救)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

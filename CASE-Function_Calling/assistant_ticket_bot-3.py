@@ -13,6 +13,10 @@ import base64
 import time
 import numpy as np
 
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
+
 # 解决中文显示问题
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'Arial Unicode MS']  # 优先使用的中文字体
 plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
@@ -198,7 +202,26 @@ def init_agent_service():
             name='门票助手',
             description='门票查询与订单分析',
             system_message=system_prompt,
-            function_list=['exc_sql', 'code_interpreter'],  # 移除绘图工具
+            function_list=[
+                'exc_sql',
+                'code_interpreter',
+                {
+                    "mcpServers": {
+                        "tavily-mcp": {
+                        "args": [
+                            "-y",
+                            "tavily-mcp@0.1.4"
+                        ],
+                        "autoApprove": [],
+                        "command": "npx",
+                        "disabled": False,
+                        "env": {
+                            "TAVILY_API_KEY": "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"
+                        }
+                        }
+                    }
+                }
+                ],  # 移除绘图工具
         )
         print("助手初始化成功！")
         return bot

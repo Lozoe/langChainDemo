@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>迪拜5日深度游游旅行规划表</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #c9a761;
+            /* Dubai Gold */
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --text-main: #333;
+            --text-light: #666;
+            --bg-light: #faf9f6;
+            --border-color: #e1e8ed;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Microsoft YaHei', sans-serif;
+            background-color: #e0e0e0;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        /* A4 Paper Settings */
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 12mm;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 5mm;
+        }
+
+        /* Print Settings */
+        @media print {
+            body {
+                background: none;
+            }
+
+            .a4-page {
+                margin: 0;
+                box-shadow: none;
+                width: 100%;
+                height: 100%;
+                padding: 10mm;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* 1. Header Section */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 8px;
+        }
+
+        .header-title h1 {
+            font-size: 26pt;
+            color: var(--secondary-color);
+            letter-spacing: 1px;
+        }
+
+        .header-title p {
+            font-size: 11pt;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+
+        .header-weather {
+            text-align: right;
+            font-size: 9pt;
+            background: var(--bg-light);
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: 1px solid var(--primary-color);
+            color: var(--secondary-color);
+        }
+
+        /* 2. Overview Section */
+        .overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 5px 0;
+        }
+
+        .overview-item {
+            display: flex;
+            align-items: center;
+            background: var(--bg-light);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 9pt;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .overview-item i {
+            font-size: 16pt;
+            color: var(--primary-color);
+            margin-right: 8px;
+        }
+
+        /* 3. Schedule Table Section */
+        .schedule {
+            flex-grow: 1;
+        }
+
+        .section-title {
+            font-size: 13pt;
+            color: var(--secondary-color);
+            border-left: 5px solid var(--primary-color);
+            padding-left: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9.5pt;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: var(--secondary-color);
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: var(--bg-light);
+        }
+
+        .day-col {
+            width: 65px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--secondary-color);
+            background-color: #f0f4f8;
+        }
+
+        .theme-col {
+            width: 110px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .activity-col {}
+
+        .activity-item {
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        .activity-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .activity-time {
+            font-weight: bold;
+            color: var(--text-light);
+            margin-right: 5px;
+            font-size: 8.5pt;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        /* 4. Bottom Grid */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .info-box {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            background: #fff;
+        }
+
+        .info-box h3 {
+            font-size: 11pt;
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .info-box h3 i {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+
+        .info-list {
+            list-style: none;
+            font-size: 9pt;
+        }
+
+        .info-list li {
+            margin-bottom: 5px;
+            position: relative;
+            padding-left: 12px;
+        }
+
+        .info-list li::before {
+            content: "◆";
+            color: var(--primary-color);
+            position: absolute;
+            left: 0;
+            font-size: 7pt;
+            top: 3px;
+        }
+
+        /* Decoration */
+        .map-decoration {
+            position: absolute;
+            right: 10mm;
+            top: 50mm;
+            opacity: 0.03;
+            font-size: 200pt;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Print Button */
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 12pt;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .print-btn:hover {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="print-btn no-print" onclick="window.print()">
+        <i class="fas fa-print"></i> 打印行程单
+    </button>
+
+    <div class="a4-page">
+        <!-- Background Icon -->
+        <i class="fas fa-mosque map-decoration"></i>
+
+        <!-- Header -->
+        <header class="header">
+            <div class="header-title">
+                <h1>奢华与奇迹 · 迪拜5日纯玩深度游</h1>
+                <p><i class="far fa-calendar-alt"></i> 建议季节：11月-次年3月 | <i class="fas fa-plane-arrival"></i> 目的地：阿联酋·迪拜
+                </p>
+            </div>
+            <div class="header-weather">
+                <strong><i class="fas fa-sun"></i> 迪拜气候提示</strong><br>
+                最佳旅游季：气温 20°C ~ 30°C<br>
+                阳光充足，请备好高倍防晒霜与墨镜
+            </div>
+        </header>
+
+        <!-- Overview -->
+        <div class="overview">
+            <div class="overview-item"><i class="fas fa-gem"></i>
+                <div><strong>核心体验</strong><br>现代奢华与阿拉伯风情</div>
+            </div>
+            <div class="overview-item"><i class="fas fa-hotel"></i>
+                <div><strong>推荐住宿</strong><br>前2晚老城，后2晚Downtown</div>
+            </div>
+            <div class="overview-item"><i class="fas fa-money-bill-wave"></i>
+                <div><strong>总预算预估</strong><br>双人整体约 1.5w - 2w RMB</div>
+            </div>
+            <div class="overview-item"><i class="fas fa-taxi"></i>
+                <div><strong>主要交通</strong><br>地铁 + Uber/Careem</div>
+            </div>
+        </div>
+
+        <!-- Schedule -->
+        <div class="schedule">
+            <h2 class="section-title"><i class="fas fa-list-ul"></i> 每日行程规划</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="day-col">日期</th>
+                        <th class="theme-col">主题与地区</th>
+                        <th class="activity-col">详细安排与打卡点</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="day-col">Day 1</td>
+                        <td class="theme-col"><i class="fas fa-city"></i> 现代之巅<br><small>(市中心区)</small></td>
+                        <td class="activity-col">
+                            <div class="activity-item"><span class="activity-time">上午</span>
+                                抵达迪拜国际机场(DXB)，前往酒店办理入住，稍作休整。</div>
+                            <div class="activity-item"><span class="activity-time">下午</span> 游览 <strong>Dubai Mall
+                                    (迪拜购物中心)</strong>，参观世界最大的室内水族馆(外部免费观赏即很震撼)。</div>
+                            <div class="activity-item"><span class="activity-time">傍晚</span> 登顶 <strong>哈利法塔 (Burj
+                                    Khalifa)</strong> 124层观日落。<span class="highlight"> *需提前网购门票(约170AED)</span></div>
+                            <div class="activity-item"><span class="activity-time">晚上</span> 欣赏迪拜音乐喷泉
+                                (18:00起每半小时一场)，在商场周围享用第一顿阿拉伯美食。</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="day-col">Day 2</td>
+                        <td class="theme-col"><i class="fas fa-monument"></i> 寻迹一千零一夜<br><small>(老城区)</small></td>
+                        <td class="activity-col">
+                            <div class="activity-item"><span class="activity-time">上午</span> 漫步 <strong>阿法迪历史街区 (Al
+                                    Fahidi)</strong>，感受风塔建筑，参观迪拜博物馆(如开放)。</div>
+                            <div class="activity-item"><span class="activity-time">中午</span> 在阿拉伯茶屋 (Arabian Tea House)
+                                享用网红中东餐。</div>
+                            <div class="activity-item"><span class="activity-time">下午</span>
+                                乘坐传统木船(Abra，仅需1AED)横渡迪拜河，体验水上交通。</div>
+                            <div class="activity-item"><span class="activity-time">傍晚</span> 游览 <strong>黄金市场 (Gold
+                                    Souk)</strong> 与香料市场，体验砍价乐趣。</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="day-col">Day 3</td>
+                        <td class="theme-col"><i class="fas fa-campground"></i> 沙漠奇遇<br><small>(郊区沙漠)</small></td>
+                        <td class="activity-col">
+                            <div class="activity-item"><span class="activity-time">上午</span> 睡到自然醒，或在市区地标如“未来博物馆”外观打卡拍照
+                                <span class="highlight">(门票极抢手需提前2月预订)</span>。
+                            </div>
+                            <div class="activity-item"><span class="activity-time">下午</span> 15:00 参加预订好的
+                                <strong>沙漠冲沙一日游 (Desert Safari)</strong>。包含越野车冲沙、骑骆驼、滑沙体验。
+                            </div>
+                            <div class="activity-item"><span class="activity-time">晚上</span>
+                                在沙漠营地享用自助烧烤晚餐，欣赏肚皮舞、旋转舞和火舞表演，星空下返回酒店。</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="day-col">Day 4</td>
+                        <td class="theme-col"><i class="fas fa-water"></i> 奢华海岸线<br><small>(朱美拉海滩</small></td>
+                        <td class="activity-col">
+                            <div class="activity-item"><span class="activity-time">上午</span> 前往 <strong>朱美拉公共海滩
+                                    (Jumeirah Beach)</strong>，在此与代表性奢华酒店 <strong>帆船酒店 (Burj Al Arab)</strong> 合影。</div>
+                            <div class="activity-item"><span class="activity-time">中午</span> 逛 <strong>朱美拉古堡集市 (Souk
+                                    Madinat Jumeirah)</strong>，被称为“迪拜小威尼斯”，在此用餐可览河流与帆船酒店绝景。</div>
+                            <div class="activity-item"><span class="activity-time">下午</span> 乘坐单轨列车(Monorail)前往
+                                <strong>朱美拉棕榈岛 (Palm Jumeirah)</strong>，打卡亚特兰蒂斯酒店。
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="day-col">Day 5</td>
+                        <td class="theme-col"><i class="fas fa-shopping-bag"></i> 奇迹与返程<br><small>(游乐与免税)</small></td>
+                        <td class="activity-col">
+                            <div class="activity-item"><span class="activity-time">上午</span> 游览 <strong>迪拜奇迹花园 (Miracle
+                                    Garden)</strong> 或 <strong>迪拜之框 (Dubai Frame)</strong>，感受人造奇迹。</div>
+                            <div class="activity-item"><span class="activity-time">下午</span> 前往阿联酋购物中心 (Mall of the
+                                Emirates) 最后补货，参观震撼的室内滑雪场。</div>
+                            <div class="activity-item"><span class="activity-time">晚上</span>
+                                提前3小时抵达迪拜国际机场，体验世界一流的免税店购物，满载而归搭乘返程航班。</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bottom Info -->
+        <div class="bottom-grid">
+            <div class="info-box">
+                <h3><i class="fas fa-info-circle"></i> 实用贴士与文化禁忌</h3>
+                <ul class="info-list">
+                    <li><strong>着装建议：</strong> 尊重当地伊斯兰文化，公共场合避免穿着过于暴露（特别是女性应遮盖肩膀和膝盖，海滩除外）。</li>
+                    <li><strong>电话与网络：</strong> 推荐提前购买当地电话卡或开启国际漫游，商场及酒店均有免费高速Wi-Fi。</li>
+                    <li><strong>周末注意：</strong> 迪拜的周末之前是周五周六，现大多改为周六周日，但周五中午为聚礼时间，部分商铺可能短暂关闭。</li>
+                    <li><strong>必备APP：</strong> Google Maps(导航) / Careem 或 Uber(打车) / XE(看汇率)。</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h3><i class="fas fa-passport"></i> 签证、预算与紧急联络</h3>
+                <ul class="info-list">
+                    <li><strong>签证政策：</strong> 中国护照前往阿联酋享受免签待遇（最长停留30天），带好护照说走就走。</li>
+                    <li><strong>消费预算：</strong> 整体机酒+游玩+餐饮，双人总计约 1.5万-2万 RMB（丰俭由人），单人约 8000-10000 RMB。</li>
+                    <li><strong>医疗急救：</strong> 1998 (救护车) / 999 (紧急报警)</li>
+                    <li><strong>中国领事保护：</strong> +971-4-3947588 (驻迪拜总领事馆)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
