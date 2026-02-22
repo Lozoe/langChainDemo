@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开发规范检查器 (MCP Server) 分析报告</title>
+    <style>
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #2c3e50;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tool-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .tool-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+
+        code {
+            background-color: #e8e8e8;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: 'Cascadia Code', Consolas, monospace;
+            color: #e74c3c;
+        }
+
+        .mermaid {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ebebeb;
+            border-radius: 8px;
+        }
+
+        ul {
+            margin-top: 5px;
+        }
+    </style>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔍 开发规范检查器 (MCP Server) 分析报告</h1>
+
+        <p>您提供的 Python 代码使用 <code>FastMCP</code> 框架创建了一个名为 <strong>"开发规范检查器"</strong> 的 MCP (Model Context Protocol)
+            应用程序接口（Server）。目前，通过 MCP 协议，大语言模型或各种代理可以方便地调用服务器对外暴露的接口工具。这个程序就是一套服务于<strong>代码质量检查和规范管控</strong>的工具集合。</p>
+
+        <h2>📊 架构与功能概览分析 (Mermaid 流程图)</h2>
+        <div class="mermaid">
+            graph TD
+            A["FastMCP Server<br>开发规范检查器"] --> B["tool: check_code_style"]
+            A --> C["tool: search_todo_comments"]
+            A --> D["tool: validate_project_structure"]
+            A --> E["tool: get_naming_conventions"]
+            A --> F["tool: check_import_organization"]
+
+            B -.-> |检查项| B1("行超长检查 > 88")
+            B -.-> |检查项| B2("缺文档字符串")
+            B -.-> |检查项| B3("大写变量名非常量")
+
+            C -.-> |匹配项| C1("TODO, FIXME, XXX, HACK")
+
+            D -.-> |Python语言| D1("期待: requirements.txt, src/")
+            D -.-> |JS语言| D2("期待: package.json, js配置文件")
+
+            E -.-> |指引词典| E1("Python, JS, Java, Go")
+
+            F -.-> |分组扫描| F1("标准库 vs 第三方库")
+        </div>
+
+        <h2>🛠️ 包含的工具模块详细说明</h2>
+
+        <div class="tool-card">
+            <div class="tool-name">1. check_code_style (检查代码风格规范)</div>
+            <p><strong>功能：</strong>接收一个目录路径，提取并读取其下所有的 <code>*.py</code> 文件内容进行风格审计。</p>
+            <p><strong>校验规则：</strong></p>
+            <ul>
+                <li>单行最大长度是否超过 88 个字符 (借鉴了 Python Black 风格规范器)。</li>
+                <li>文件是否存在模块级的 docstring (是否包含 <code>"""</code> 或 <code>'''</code>)。</li>
+                <li>粗略检查变量命名是否不规范（利用正则找出形如全大写但被用作局部变量的名字，以判定是否违背应该下划线全小写的原则）。</li>
+            </ul>
+        </div>
+
+        <div class="tool-card">
+            <div class="tool-name">2. search_todo_comments (搜索TODO相关注释)</div>
+            <p><strong>功能：</strong>扫描项目中常见源代码文件格式 (如 <code>.py</code>, <code>.js</code>, <code>.java</code>,
+                <code>.cpp</code> 等)，利用正则全词忽略大小写匹配的方式找出技术债或待补全记录。
+            </p>
+            <p><strong>关注的标记：</strong> <code>TODO:</code>, <code>FIXME:</code>, <code>XXX:</code>, <code>HACK:</code>
+            </p>
+        </div>
+
+        <div class="tool-card">
+            <div class="tool-name">3. validate_project_structure (验证项目结构)</div>
+            <p><strong>功能：</strong>探测执行环境下的文件和目录存在情况，判断是否符合某语言主流架构的"最佳实践"并生成推荐提示。</p>
+            <p><strong>判定模式（当前支持配置）：</strong></p>
+            <ul>
+                <li><strong>Python</strong>：检查 <code>requirements.txt</code>, <code>setup.py</code> 等和 <code>src</code>,
+                    <code>tests</code> 文件夹等是否存在。
+                </li>
+                <li><strong>JavaScript</strong>：检查 <code>package.json</code>, <code>vite/webpack.config.js</code> 和
+                    <code>dist</code>, <code>public</code> 等。
+                </li>
+            </ul>
+        </div>
+
+        <div class="tool-card">
+            <div class="tool-name">4. get_naming_conventions (获取命名规范)</div>
+            <p><strong>功能：</strong>一个纯数据形式的查询接口，向大模型下发特定语言的标准规范定义文本。</p>
+            <p><strong>涵盖内容：</strong>Python, JavaScript, Java, Go 四种语言各层级（变量、函数、类、包）应该使用的是 <code>snake_case</code>,
+                <code>camelCase</code> 还是 <code>PascalCase</code> 形式。
+            </p>
+        </div>
+
+        <div class="tool-card">
+            <div class="tool-name">5. check_import_organization (检查导入语句组织)</div>
+            <p><strong>功能：</strong>对输入的一份 Python 文件专门做导入依赖规范度巡查。</p>
+            <p><strong>判断逻辑：</strong>系统内写死列举了主流的 <code>stdlib_modules</code> 标准库名列表。当扫描到 <code>import</code>
+                时，提取第一个包层级做比对，借此分划归类为：标准库导入、第三方库导入（从而可以指导开发者分段落排版）。</p>
+        </div>
+
+        <h2>💡 整体评价与用途</h2>
+        <p>该脚本是一个非常有实用价值的代码审查和辅助插件。当它被大模型连接使用时，模型就能拥有了“实时探测本地文件代码坏味道”、“寻找代办”的超能力，成为你的项目质量哨兵或“自动化代码格式审查助手”。</p>
+        <p>脚本末尾做了很好的启动设计，当使用 <code>mcp dev</code> 执行时，会使用底层 server 原生运行；而如果手动命令执行则使用 FastMCP 自身的 run 循环运行。</p>
+    </div>
+</body>
+
+</html>
