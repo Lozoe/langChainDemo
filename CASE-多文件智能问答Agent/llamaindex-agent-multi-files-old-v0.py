@@ -2,7 +2,6 @@
 # coding: utf-8
 
 import os
-import asyncio
 from llama_index.core import (
     VectorStoreIndex,
     SimpleDirectoryReader,
@@ -10,20 +9,18 @@ from llama_index.core import (
     StorageContext,
     load_index_from_storage,
 )
-from llama_index.core.agent.workflow import ReActAgent
+from llama_index.core.agent import ReActAgent
 from llama_index.core.tools import FunctionTool
 from llama_index.llms.dashscope import DashScope
-from llama_index.embeddings.dashscope import (
-    DashScopeEmbedding,
-    DashScopeTextEmbeddingModels,
-)
-
+from llama_index.embeddings.dashscope import DashScopeEmbedding
+# 默认加载.env中的环境变量
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
 
 # 步骤 1：配置 LLM 和 Embedding
 def setup_llm_and_embedding():
     """配置 LLM 和 Embedding，使用 DashScope"""
     api_key = os.getenv('DASHSCOPE_API_KEY')
-    
     if not api_key:
         raise ValueError("请设置环境变量 DASHSCOPE_API_KEY")
     
@@ -35,9 +32,10 @@ def setup_llm_and_embedding():
         top_p=0.8,
     )
     
-    # 使用 DashScope Embedding（自动从环境变量读取 API key）
+    # 使用 DashScope Embedding
     embed_model = DashScopeEmbedding(
-        model_name=DashScopeTextEmbeddingModels.TEXT_EMBEDDING_V2,
+        model_name="text-embedding-v2",
+        api_key=api_key,
     )
     
     return llm, embed_model
@@ -106,61 +104,59 @@ def create_agent(index, llm):
     
     retrieve_tool = FunctionTool.from_defaults(fn=retrieve_documents)
     
-    # 创建智能体（新版 API）
-    agent = ReActAgent(
+    # 创建智能体
+    agent = ReActAgent.from_tools(
         tools=[retrieve_tool],
         llm=llm,
+        verbose=True,
         system_prompt=system_instruction,
     )
-    
+    print("智能体创建成功")
     return agent, retriever
 
 
 # 步骤 4：主函数
-async def main():
+def main():
     """主函数"""
     # 配置 LLM 和 Embedding
     llm, embed_model = setup_llm_and_embedding()
     Settings.llm = llm
     Settings.embed_model = embed_model
-    
+    # print("无法创建索引，程序退出")
     # 加载文档并创建索引
     index = load_documents_and_create_index()
+
     if index is None:
         print("无法创建索引，程序退出")
         return
-    
+
     # 创建智能体
     agent, retriever = create_agent(index, llm)
-    
+
     # 执行查询
-    query = "介绍下雇主责任险"
+    # query = "介绍下雇主责任险"
+    query = "介绍下什么是财产一切险"
     print(f"\n用户查询: {query}\n")
-    
+
     # 显示召回的文档内容
     print("\n===== 召回的文档内容 =====")
     retrieved_nodes = retriever.retrieve(query)
     if retrieved_nodes:
         for i, node in enumerate(retrieved_nodes):
             print(f"\n文档片段 {i+1}:")
-            # 处理特殊字符，避免 Windows 控制台编码问题
-            text_preview = node.text[:200].encode('gbk', errors='replace').decode('gbk')
-            print(f"内容: {text_preview}...")  # 只显示前200个字符
+            print(f"内容: {node.text[:200]}...")  # 只显示前200个字符
             print(f"元数据: {node.metadata}")
             if hasattr(node, 'score'):
                 print(f"相似度分数: {node.score}")
     else:
         print("没有召回任何文档内容")
     print("===========================\n")
-    
-    # 使用智能体回答问题（新版 API 使用 run 方法，是异步的）
+
+    # 使用智能体回答问题
     print("\n===== 智能体回复 =====")
-    response = await agent.run(query)
-    # 处理特殊字符，避免 Windows 控制台编码问题
-    response_str = str(response).encode('gbk', errors='replace').decode('gbk')
-    print(response_str)
+    response = agent.chat(query)
+    print(response)
     print("======================\n")
 
-
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
