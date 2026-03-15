@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALS.py 代码解析 - 矩阵分解与推荐</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f1419;
+            --surface: #1a2332;
+            --text: #e6edf3;
+            --muted: #8b949e;
+            --accent: #58a6ff;
+            --green: #3fb950;
+            --orange: #d29922;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: "SF Mono", "Consolas", "Monaco", monospace;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        h1 { color: var(--accent); font-size: 1.75rem; border-bottom: 1px solid var(--surface); padding-bottom: 0.5rem; }
+        h2 { color: var(--green); font-size: 1.25rem; margin-top: 2rem; }
+        h3 { color: var(--orange); font-size: 1rem; margin-top: 1.25rem; }
+        p { color: var(--muted); margin: 0.5rem 0; }
+        .mermaid { background: var(--surface); border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+        .section { margin-bottom: 2rem; }
+        code { background: var(--surface); padding: 0.2em 0.4em; border-radius: 4px; font-size: 0.9em; }
+        ul { color: var(--muted); padding-left: 1.5rem; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+        th, td { border: 1px solid var(--surface); padding: 0.5rem 0.75rem; text-align: left; }
+        th { background: var(--surface); color: var(--accent); }
+    </style>
+</head>
+<body>
+    <h1>ALS.py 代码解析</h1>
+    <p>基于交替最小二乘（ALS）的矩阵分解实现，用于 MovieLens 评分预测与 Top-N 推荐。</p>
+
+    <div class="section">
+        <h2>1. 整体架构</h2>
+        <p>项目由三部分组成：自定义 <code>Matrix</code> 类、<code>ALS</code> 推荐模型、以及数据加载与主流程。</p>
+        <div class="mermaid">
+flowchart LR
+    subgraph 输入
+        A[ratings_small.csv]
+    end
+    subgraph 核心
+        B[Matrix 类]
+        C[ALS 类]
+    end
+    subgraph 输出
+        D[Top-N 推荐]
+        E[RMSE]
+    end
+    A --> C
+    B --> C
+    C --> D
+    C --> E
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>2. Matrix 类结构</h2>
+        <p>手写矩阵类，支持行/列提取、转置、求逆（高斯消元）、矩阵乘法等，为 ALS 提供稠密矩阵运算。</p>
+        <div class="mermaid">
+classDiagram
+    class Matrix {
+        +list~list~ data
+        +tuple shape
+        +row(row_no) Matrix
+        +col(col_no) Matrix
+        +is_square bool
+        +transpose Matrix
+        +eye Matrix
+        +inverse Matrix
+        +mat_mul(B) Matrix
+        +mean() Matrix
+        +scala_mul(scala) Matrix
+        -_eye(n) list
+        -_gaussian_elimination(aug_matrix) list
+        -_inverse(data) list
+        -_row_mul(row_A, row_B) float
+        -_mat_mul(row_A, B) list
+        -_mean(data) list
+    }
+        </div>
+        <h3>主要方法说明</h3>
+        <ul>
+            <li><code>row/col</code>：按索引取行/列，返回 1 行或 1 列的 Matrix。</li>
+            <li><code>transpose</code>：转置矩阵（zip 实现）。</li>
+            <li><code>inverse</code>：方阵求逆，内部用增广矩阵 + 高斯消元化为单位阵，取右半部分即为逆矩阵。</li>
+            <li><code>mat_mul(B)</code>：矩阵乘法 A×B，用 <code>_mat_mul</code> 对 A 的每一行与 B 的列做点积。</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>3. ALS 类结构</h2>
+        <p>交替最小二乘：将评分矩阵 R 近似为 U×V，固定 U 更新 V，再固定 V 更新 U，迭代至收敛。</p>
+        <div class="mermaid">
+classDiagram
+    class ALS {
+        +user_ids tuple
+        +item_ids tuple
+        +user_ids_dict dict
+        +item_ids_dict dict
+        +user_matrix Matrix
+        +item_matrix Matrix
+        +user_items dict
+        +shape tuple
+        +rmse float
+        +fit(X, k, max_iter)
+        +predict(user_ids, n_items) list
+        -_process_data(X) ratings, ratings_T
+        -_users_mul_ratings(users, ratings_T) Matrix
+        -_items_mul_ratings(items, ratings) Matrix
+        -_gen_random_matrix(n_rows, n_colums) Matrix
+        -_get_rmse(ratings) float
+        -_predict(user_id, n_items) list
+    }
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>4. 数据流程：从原始数据到稀疏结构</h2>
+        <p><code>_process_data(X)</code> 把 (user_id, item_id, rating) 列表转为两个稀疏视图，并建立 id→下标 映射。</p>
+        <div class="mermaid">
+flowchart TB
+    subgraph 输入 X
+        X1["[(user_id, item_id, rating), ...]"]
+    end
+    subgraph _process_data
+        A[提取 user_ids / item_ids]
+        B[枚举建 user_ids_dict, item_ids_dict]
+        C[构建 ratings: user_id -> item_id -> rating]
+        D[构建 ratings_T: item_id -> user_id -> rating]
+    end
+    subgraph 输出
+        E["ratings: {user: {item: rating}}"]
+        F["ratings_T: {item: {user: rating}}"]
+    end
+    X1 --> A
+    A --> B
+    B --> C
+    B --> D
+    C --> E
+    D --> F
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>5. ALS 训练流程（fit）</h2>
+        <p>每次迭代：奇数步用当前 item 矩阵更新 user 矩阵；偶数步用当前 user 矩阵更新 item 矩阵。更新公式来自最小二乘闭式解。</p>
+        <div class="mermaid">
+flowchart TB
+    Start[_process_data 得到 ratings, ratings_T] --> Init[随机初始化 user_matrix: k×m]
+    Init --> Iter{迭代 i = 0 .. max_iter-1}
+    Iter -->|i 为偶数| FixUser[固定 user_matrix]
+    FixUser --> UpdateItem["更新 item_matrix: 闭式解 U^T U inv"]
+    UpdateItem --> RMSE1[计算 RMSE]
+    RMSE1 --> Iter
+    Iter -->|i 为奇数| FixItem[固定 item_matrix]
+    FixItem --> UpdateUser["更新 user_matrix: 闭式解 V^T V inv"]
+    UpdateUser --> RMSE2[计算 RMSE]
+    RMSE2 --> Iter
+    Iter --> End[保存最终 rmse]
+        </div>
+        <p>其中 U = user_matrix（k×m），V = item_matrix（k×n）。<code>_users_mul_ratings</code> / <code>_items_mul_ratings</code> 实现稠密矩阵与稀疏评分的乘法，避免构造完整大矩阵。</p>
+    </div>
+
+    <div class="section">
+        <h2>6. Top-N 推荐流程（predict）</h2>
+        <p>对每个用户，用其 user 向量与所有 item 向量相乘得到预测分，过滤已评分的物品后按分数取 Top-N。</p>
+        <div class="mermaid">
+flowchart LR
+    subgraph _predict
+        A[user_id] --> B[取 user 列向量]
+        B --> C[user_row × item_matrix]
+        C --> D[得到每个 item 的预测分]
+        D --> E[过滤已评分 item]
+        E --> F[按分数排序取 Top-N]
+    end
+    F --> G["(item_id, score) 列表"]
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>7. 主程序执行顺序</h2>
+        <div class="mermaid">
+sequenceDiagram
+    participant Main
+    participant load_movie_ratings
+    participant ALS
+    participant Matrix
+
+    Main->>load_movie_ratings: load_movie_ratings('./ratings_small.csv')
+    load_movie_ratings-->>Main: X = [(userId, movieId, rating), ...]
+    Main->>ALS: model = ALS()
+    Main->>ALS: model.fit(X, k=3, max_iter=2)
+    ALS->>ALS: _process_data(X)
+    ALS->>Matrix: _gen_random_matrix(k, m)
+    loop 每次迭代
+        ALS->>Matrix: inverse, mat_mul 等
+        ALS->>ALS: _get_rmse(ratings)
+    end
+    Main->>ALS: model.predict(user_ids, n_items=2)
+    ALS->>ALS: _predict 每个 user_id
+    ALS-->>Main: predictions 列表
+    Main->>Main: format_prediction 打印
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>8. 关键公式与变量</h2>
+        <table>
+            <tr><th>符号</th><th>含义</th></tr>
+            <tr><td>R</td><td>评分矩阵（稀疏），m 用户 × n 物品</td></tr>
+            <tr><td>k</td><td>隐因子维度（矩阵分解的秩）</td></tr>
+            <tr><td>U (user_matrix)</td><td>用户矩阵 k×m，每列对应用户向量</td></tr>
+            <tr><td>V (item_matrix)</td><td>物品矩阵 k×n，每列对应物品向量</td></tr>
+            <tr><td>R ≈ U^T × V</td><td>低秩近似，预测分 = 用户向量 · 物品向量</td></tr>
+            <tr><td>固定 V 求 U</td><td>U = (V V^T)^(-1) V R^T（按列的最小二乘）</td></tr>
+            <tr><td>固定 U 求 V</td><td>V = (U U^T)^(-1) U R（代码中通过 ratings_T 实现）</td></tr>
+        </table>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            flowchart: { useMaxWidth: true, htmlLabels: true },
+            sequence: { useMaxWidth: true }
+        });
+    </script>
+</body>
+</html>
